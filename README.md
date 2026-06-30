@@ -13,7 +13,8 @@
   <a href="#features">Features</a> |
   <a href="#getting-started">Getting Started</a> |
   <a href="#roadmap">Roadmap</a> |
-  <a href="#security">Security</a>
+  <a href="#security">Security</a> |
+  <a href="CHANGELOG.md">Changelog</a>
 </p>
 
 <p align="center">

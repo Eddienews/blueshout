@@ -1,0 +1,43 @@
+name: Feature request
+description: Suggest an improvement or new capability for Blueshout.
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or use case
+      description: What would this help you do?
+      placeholder: I want to listen to Bluesky while ...
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Describe the behavior or interface you would like to see.
+      placeholder: Add a setting that ...
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Share any other approaches you considered.
+    validations:
+      required: false
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Backend
+        - Frontend
+        - TTS
+        - Bluesky integration
+        - Deployment
+        - Documentation
+        - Other
+    validations:
+      required: false
