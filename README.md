@@ -2,6 +2,12 @@
 
 Blueshout is a small Flask app that reads new Bluesky posts aloud. Users sign in with a Bluesky App Password, the backend polls the Bluesky AT Protocol API, and Piper generates server-side speech audio.
 
+## Demo
+
+Try Blueshout at [blueshout.app](https://blueshout.app).
+
+![Blueshout demo screenshot](docs/blueshout-demo.png)
+
 ## Features
 
 - Bluesky login using App Passwords
