@@ -1,0 +1,1076 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Blueshout</title>
+  <!-- BS_VERSION=29 -->
+
+  <!-- Inline favicon to avoid /favicon.ico 404 -->
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3CradialGradient id='g' cx='30%25' cy='30%25' r='70%25'%3E%3Cstop offset='0%25' stop-color='%234ea3ff'/%3E%3Cstop offset='100%25' stop-color='%231a3a7a'/%3E%3C/radialGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='16' fill='url(%23g)'/%3E%3Cpath d='M24 24h7l7-6v28l-7-6h-7z' fill='white' opacity='.95'/%3E%3Cpath d='M44 26c3 3 3 9 0 12' fill='none' stroke='white' stroke-width='4' stroke-linecap='round'/%3E%3Cpath d='M50 22c5 5 5 15 0 20' fill='none' stroke='white' stroke-width='4' stroke-linecap='round' opacity='.8'/%3E%3C/svg%3E" />
+
+  <style>
+    :root{
+      --bg:#0b1220;
+      --panel:#111a2e;
+      --panel2:#0e1830;
+      --accent:#4ea3ff;
+      --accent-strong:#2a82ff;
+      --text:#e9f1ff;
+      --muted:#9bb2d1;
+      --bad:#ff6b6b;
+      --good:#3ddc97;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      --round:16px;
+      --shadow: 0 18px 50px rgba(0,0,0,.35);
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      background:linear-gradient(180deg,#0a1020 0%, #0b1426 100%);
+      color:var(--text);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto,
+        "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
+    }
+    a{color:inherit;text-decoration:none}
+
+    .wrap{
+      max-width:1100px;
+      margin:0 auto;
+      padding:16px;
+      display:flex;
+      flex-direction:column;
+      gap:16px;
+      min-height:100%;
+    }
+
+    /* ================= TOP BAR ================= */
+    .topbar{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      padding:10px 12px;
+      background:rgba(255,255,255,0.03);
+      border:1px solid rgba(255,255,255,0.06);
+      border-radius:var(--round);
+      backdrop-filter: blur(8px);
+      box-shadow: var(--shadow);
+      flex-wrap:wrap;
+      justify-content:space-between;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-width:0;
+      flex:0 0 auto;
+    }
+
+    /* Logo URL:
+       file: /home/blueshout/voice/static/blueshout-logo.png
+       URL : /static/blueshout-logo.png */
+    .logoImg{
+      width:34px;
+      height:34px;
+      display:block;
+      object-fit:contain;
+      background:transparent;
+      filter: drop-shadow(0 10px 24px rgba(0,0,0,.35));
+      -webkit-filter: drop-shadow(0 10px 24px rgba(0,0,0,.35));
+      flex:0 0 34px;
+    }
+
+    .title{
+      font-weight:900;
+      letter-spacing:.3px;
+      display:flex;
+      align-items:center;
+      gap:8px;
+      line-height:1;
+      white-space:nowrap;
+    }
+
+    .beta{
+      padding:3px 8px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:900;
+      letter-spacing:.2px;
+      color:#d8e7ff;
+      border:1px solid rgba(255,255,255,0.16);
+      background:rgba(255,255,255,0.06);
+    }
+
+    .statusRow{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex:1 1 auto;
+      min-width:0;
+      flex-wrap:wrap;
+      justify-content:flex-start;
+    }
+
+    .actions{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex:0 0 auto;
+      margin-left:auto;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+
+    .pill{
+      padding:6px 10px;
+      border:1px solid rgba(255,255,255,0.15);
+      border-radius:999px;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1;
+      white-space:nowrap;
+      background: rgba(0,0,0,0.14);
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+    }
+    .pill strong{color:var(--text); font-weight:800}
+
+    .btn{
+      appearance:none;
+      border:0;
+      cursor:pointer;
+      background:var(--accent);
+      color:#fff;
+      border-radius:12px;
+      padding:8px 12px;
+      font-weight:800;
+      white-space:nowrap;
+      transition: transform .08s ease, filter .2s ease;
+    }
+    .btn:hover{filter:brightness(1.05)}
+    .btn:active{transform: translateY(1px)}
+    .btn.secondary{
+      background:#1d2a49;
+      color:#d8e7ff;
+      border:1px solid #2b3b63;
+    }
+    .btn.ghost{
+      background:transparent;
+      color:var(--muted);
+      border:1px solid rgba(255,255,255,0.15);
+    }
+    .btn:disabled{opacity:.5;cursor:not-allowed}
+
+    /* ================= PANELS ================= */
+    .panel{
+      background:var(--panel);
+      border:1px solid rgba(255,255,255,0.08);
+      border-radius:var(--round);
+      padding:16px;
+    }
+
+    /* ================= HERO ================= */
+    .hero{
+      display:grid;
+      grid-template-columns: 1.12fr .88fr;
+      gap:16px;
+      align-items:stretch;
+      background:
+        radial-gradient(900px 280px at 20% -10%, rgba(78,163,255,0.18), transparent 60%),
+        radial-gradient(700px 220px at 90% 0%, rgba(61,220,151,0.10), transparent 55%),
+        var(--panel);
+      box-shadow: var(--shadow);
+    }
+    .hero h1{
+      margin:0 0 8px 0;
+      font-size:28px;
+      line-height:1.15;
+      letter-spacing:.2px;
+    }
+    .hero p{
+      margin:0;
+      color:var(--muted);
+      line-height:1.55;
+      font-size:14px;
+    }
+    .hero .left{display:flex;flex-direction:column;gap:10px}
+    .hero .bullets{
+      margin:10px 0 0 0;
+      padding:0;
+      list-style:none;
+      display:grid;
+      gap:8px;
+      color:#cfe0ff;
+      font-size:14px;
+    }
+    .hero .bullets li{display:flex;gap:10px;align-items:flex-start}
+    .dot{
+      width:10px;height:10px;border-radius:999px;
+      background:rgba(78,163,255,.9);
+      margin-top:4px;
+      box-shadow: 0 0 0 4px rgba(78,163,255,.12);
+      flex:0 0 10px;
+    }
+    .hero .right{
+      background:rgba(0,0,0,0.16);
+      border:1px solid rgba(255,255,255,0.08);
+      border-radius:var(--round);
+      padding:14px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    .smallTitle{
+      font-weight:900;
+      letter-spacing:.2px;
+      margin:0;
+      font-size:14px;
+      color:#dbe9ff;
+    }
+    .note{
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.45;
+    }
+    .kbd{
+      font-family: var(--mono);
+      font-size:12px;
+      padding:2px 6px;
+      border-radius:8px;
+      border:1px solid rgba(255,255,255,0.14);
+      background:rgba(0,0,0,0.22);
+      color:#dbe9ff;
+      display:inline-block;
+    }
+
+    /* ================= LOGIN ================= */
+    #loginPanel .row{display:flex;gap:8px;flex-wrap:wrap}
+    .input{
+      background:var(--panel2);
+      color:#eaf1ff;
+      border:1px solid #24365f;
+      border-radius:10px;
+      padding:10px 12px;
+      min-width:240px;
+      outline:none;
+      flex:1 1 240px;
+    }
+
+    /* ================= NOW PLAYING ================= */
+    .stack{display:grid;gap:16px}
+    .now{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:10px;
+      padding:28px 12px 18px;
+      border-radius:var(--round);
+      background:
+        radial-gradient(1000px 260px at 50% -20%, rgba(78,163,255,0.2), transparent 60%),
+        var(--panel);
+      min-height:160px;
+      box-shadow: var(--shadow);
+      position:relative;
+    }
+    #nowName{
+      font-size:24px;
+      font-weight:900;
+      letter-spacing:.2px;
+      text-align:center;
+      min-height:1.6em;
+    }
+    #waitingLabel{
+      font-size:14px;
+      color:var(--muted);
+      min-height:1.2em;
+      text-align:center;
+    }
+    .wave{display:flex;gap:5px;height:22px;align-items:flex-end}
+    .wave span{width:6px;height:6px;border-radius:4px;background:#3c7ee8;opacity:.7;transform-origin:center bottom;transition:height .25s ease, background .2s ease, opacity .2s ease}
+    .wave.active span{animation:bounce .9s ease-in-out infinite;background:var(--accent-strong);opacity:1}
+    .wave.active span:nth-child(2){animation-delay:.08s}.wave.active span:nth-child(3){animation-delay:.16s}
+    .wave.active span:nth-child(4){animation-delay:.24s}.wave.active span:nth-child(5){animation-delay:.32s}
+    @keyframes bounce{0%,100%{height:6px}50%{height:22px}}
+    .controls{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:6px}
+    .nowMeta{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+
+    /* ================= TRANSCRIPT (CARDS) ================= */
+    .logbox{
+      border:1px solid rgba(255,255,255,0.07);
+      border-radius:var(--round);
+      overflow:hidden;
+      box-shadow: var(--shadow);
+    }
+    .loghdr{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 10px;
+      background:var(--panel2);
+      color:#a9c2e8;
+      font-weight:900;
+      border-bottom:1px solid #22345a;
+    }
+    .logbody{
+      max-height:360px;
+      overflow:auto;
+      background:#0b1427;
+      padding:10px;
+    }
+
+    /* Cards container */
+    #cards{
+      display:grid;
+      gap:10px;
+    }
+
+    .tcard{
+      border:1px solid rgba(255,255,255,0.08);
+      background:rgba(255,255,255,0.03);
+      border-radius:14px;
+      padding:10px 12px;
+    }
+    .tmeta{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:6px;
+      flex-wrap:wrap;
+    }
+    .tauthor{
+      display:flex;
+      align-items:baseline;
+      gap:8px;
+      min-width:0;
+    }
+    .tauthor .name{
+      font-weight:900;
+      color:#e9f1ff;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+      max-width:520px;
+    }
+    .tauthor .handle{
+      color:rgba(155,178,209,.95);
+      font-size:12.5px;
+      font-family:var(--mono);
+      opacity:.95;
+    }
+    .chips{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+    .chip{
+      padding:3px 8px;
+      border-radius:999px;
+      font-size:12px;
+      line-height:1;
+      border:1px solid rgba(255,255,255,0.14);
+      background:rgba(0,0,0,0.18);
+      color:#dbe9ff;
+      font-family: var(--mono);
+    }
+    .ttext{
+      color:#d9e7ff;
+      font-size:13.5px;
+      line-height:1.45;
+      white-space:pre-wrap;
+      word-wrap:break-word;
+    }
+    .ttext .muted{
+      color:rgba(155,178,209,.95);
+    }
+
+    .hidden{display:none !important}
+
+    /* ================= MOBILE ================= */
+    @media (max-width: 900px){
+      .hero{grid-template-columns:1fr}
+    }
+    @media (max-width:700px){
+      #nowName{font-size:20px}
+      .actions{width:100%; justify-content:flex-start}
+      .statusRow{width:100%}
+      .tauthor .name{max-width:280px}
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+
+    <!-- TOP BAR -->
+    <div class="topbar">
+      <div class="brand">
+        <img class="logoImg" src="/static/blueshout-logo.png?v=2" alt="Blueshout logo"
+             onerror="this.onerror=null; this.style.display='none';" />
+        <div class="title">Blueshout <span class="beta">BETA</span></div>
+      </div>
+
+      <div class="statusRow">
+        <div id="sessionPill" class="pill hidden">Not logged</div>
+        <div id="followsPill" class="pill hidden">0 following</div>
+        <div class="pill">Transcript: <strong id="transcriptState">On</strong></div>
+      </div>
+
+      <div class="actions">
+        <button id="btnTranscript" class="btn ghost">Transcript</button>
+        <button id="btnRefresh" class="btn secondary hidden">Refresh</button>
+        <button id="btnLogout" class="btn hidden">Log out</button>
+      </div>
+    </div>
+
+    <!-- HERO -->
+    <div class="panel hero">
+      <div class="left">
+        <h1>Listen to the Bluesky posts you follow.</h1>
+        <p>
+          Blueshout reads new posts out loud using fast server-side TTS, so you can keep up hands-free.
+          This is an early <b>Beta</b> — we’re improving voices and stability continuously.
+        </p>
+        <ul class="bullets">
+          <li><span class="dot"></span><span>Log in with a Bluesky <b>App Password</b> (never your main password).</span></li>
+          <li><span class="dot"></span><span>Press <span class="kbd">Start</span>. New posts are queued and read one by one.</span></li>
+          <li><span class="dot"></span><span>Transcript is <b>On</b> by default. Tap <span class="kbd">Transcript</span> to hide it.</span></li>
+        </ul>
+      </div>
+
+      <div class="right">
+        <p class="smallTitle">Privacy & notes</p>
+        <div class="note">
+          • Bluesky → Settings → Advanced → App Passwords.<br/>
+          • App Password only — we never ask for your main Bluesky password.<br/>
+          • If audio doesn’t start on iPhone, tap <span class="kbd">Start</span> again (iOS autoplay rules).<br/>
+          • Some languages may be skipped (e.g., certain CJK posts).
+        </div>
+      </div>
+    </div>
+
+    <!-- LOGIN -->
+    <div id="loginPanel" class="panel">
+      <div style="font-weight:900; margin-bottom:8px;">Log in to Bluesky</div>
+      <div class="row">
+        <input id="inHandle" class="input" placeholder="Handle (e.g., yourname.bsky.social)" />
+        <input id="inAppPass" class="input" placeholder="App Password (xxxx-xxxx-xxxx-xxxx)" type="password" />
+        <button id="btnLogin" class="btn">Log in</button>
+      </div>
+      <div style="margin-top:6px; color:var(--muted); font-size:13px; line-height:1.4;">
+        Use a Bluesky <b>App Password</b> (Settings ▸ Advanced ▸ App Passwords).
+      </div>
+    </div>
+
+    <!-- MAIN -->
+    <div id="mainArea" class="stack hidden">
+      <div class="panel now">
+        <div id="nowName">Standing by</div>
+        <div id="waitingLabel">Waiting for new posts</div>
+
+        <div class="nowMeta">
+          <div id="langChip" class="pill hidden">Lang: <strong id="langValue">en-US</strong></div>
+        </div>
+
+        <div id="wave" class="wave">
+          <span></span><span></span><span></span><span></span><span></span>
+        </div>
+        <div class="controls">
+          <button id="btnStart" class="btn">Start</button>
+          <button id="btnPause" class="btn secondary">Pause</button>
+        </div>
+      </div>
+
+      <!-- Transcript ON by default -->
+      <div id="logBox" class="logbox">
+        <div class="loghdr">
+          <span>Transcript</span>
+          <div style="flex:1"></div>
+          <button id="btnClearTranscript" class="btn ghost" style="padding:4px 8px">Clear</button>
+          <button id="btnHideTranscript" class="btn ghost" style="padding:4px 8px">Hide</button>
+        </div>
+        <div class="logbody">
+          <div id="cards"></div>
+        </div>
+      </div>
+
+      <audio id="waitingAudio" src="/static/waiting-music.mp3" loop playsinline></audio>
+      <audio id="ttsAudio" playsinline></audio>
+    </div>
+
+  </div>
+
+<script>
+/* --------------------------- DOM --------------------------- */
+const els = {
+  loginPanel:   document.getElementById('loginPanel'),
+  inHandle:     document.getElementById('inHandle'),
+  inAppPass:    document.getElementById('inAppPass'),
+  btnLogin:     document.getElementById('btnLogin'),
+
+  mainArea:     document.getElementById('mainArea'),
+  sessionPill:  document.getElementById('sessionPill'),
+  followsPill:  document.getElementById('followsPill'),
+
+  btnTranscript: document.getElementById('btnTranscript'),
+  btnHideTranscript: document.getElementById('btnHideTranscript'),
+  btnClearTranscript: document.getElementById('btnClearTranscript'),
+  logBox:       document.getElementById('logBox'),
+  cards:        document.getElementById('cards'),
+
+  btnStart:     document.getElementById('btnStart'),
+  btnPause:     document.getElementById('btnPause'),
+  btnRefresh:   document.getElementById('btnRefresh'),
+  btnLogout:    document.getElementById('btnLogout'),
+
+  nowName:      document.getElementById('nowName'),
+  waitingLabel: document.getElementById('waitingLabel'),
+  wave:         document.getElementById('wave'),
+
+  waitingAudio: document.getElementById('waitingAudio'),
+  ttsAudio:     document.getElementById('ttsAudio'),
+
+  transcriptState: document.getElementById('transcriptState'),
+
+  langChip: document.getElementById('langChip'),
+  langValue: document.getElementById('langValue'),
+};
+
+/* --------------------------- Transcript: ON by default --------------------------- */
+let transcriptOn = true;
+
+// Keep transcript “clean”: user content only (system logs go to console).
+// If you ever want a debug mode later, you can add a toggle and render sys logs too.
+function setTranscriptUI(){
+  els.transcriptState.textContent = transcriptOn ? 'On' : 'Off';
+  els.logBox.classList.toggle('hidden', !transcriptOn);
+}
+
+/* --------------------------- System logging --------------------------- */
+function logSys(msg, isError=false){
+  if(isError) console.error(msg); else console.log(msg);
+}
+
+/* --------------------------- Transcript cards --------------------------- */
+const MAX_CARDS = 180;
+
+function escapeHtml(s){
+  return (s ?? '')
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#039;');
+}
+
+function normalizeDisplayHandle(handle){
+  const h = (handle || '').trim();
+  if(!h) return '';
+  return h.startsWith('@') ? h : `@${h}`;
+}
+
+function addTranscriptCard({name, handle, text, lang}){
+  if(!transcriptOn) return;
+
+  const card = document.createElement('div');
+  card.className = 'tcard';
+
+  const safeName = escapeHtml(name || 'User');
+  const safeHandle = escapeHtml(normalizeDisplayHandle(handle || ''));
+  const safeLang = escapeHtml(lang || '');
+
+  const meta = document.createElement('div');
+  meta.className = 'tmeta';
+
+  const author = document.createElement('div');
+  author.className = 'tauthor';
+  author.innerHTML = `
+    <div class="name">${safeName}</div>
+    ${safeHandle ? `<div class="handle">${safeHandle}</div>` : ``}
+  `;
+
+  const chips = document.createElement('div');
+  chips.className = 'chips';
+  chips.innerHTML = safeLang ? `<div class="chip">${safeLang}</div>` : ``;
+
+  meta.appendChild(author);
+  meta.appendChild(chips);
+
+  const body = document.createElement('div');
+  body.className = 'ttext';
+  body.textContent = text || '';
+
+  card.appendChild(meta);
+  card.appendChild(body);
+
+  // ✅ Novo card no topo (cards sobem)
+  els.cards.prepend(card);
+
+  // ✅ Remove o mais antigo do fim
+  while(els.cards.children.length > MAX_CARDS){
+    els.cards.removeChild(els.cards.lastChild);
+  }
+
+  // ✅ Sempre mostra o mais recente (topo)
+  const scroller = els.cards.parentElement; // logbody
+  scroller.scrollTop = 0;
+}
+
+function clearTranscript(){
+  els.cards.innerHTML = '';
+  const scroller = els.cards.parentElement;
+  scroller.scrollTop = 0;
+}
+
+/* --------------------------- Now playing helpers --------------------------- */
+function setNow(text){ els.nowName.textContent = text || '' }
+
+let isPlaying = false;
+
+function setWaiting(on){
+  if(on){
+    els.waitingLabel.textContent = 'Waiting for new posts';
+    if(!isPlaying) setNow('Standing by');
+    els.wave.classList.remove('active');
+
+    // ✅ standby = esconder Lang
+    setLangChip(null);
+  }else{
+    els.waitingLabel.textContent = '';
+  }
+}
+
+function setSpeaking(on){
+  on ? els.wave.classList.add('active') : els.wave.classList.remove('active');
+}
+
+function setLangChip(lang){
+  if(!lang){
+    els.langChip.classList.add('hidden');
+    return;
+  }
+  els.langValue.textContent = lang;
+  els.langChip.classList.remove('hidden');
+}
+
+
+/* --------------------------- API --------------------------- */
+async function api(path, opts={}){
+  const r = await fetch(path, {
+    method: opts.method || 'GET',
+    headers: {'Content-Type':'application/json'},
+    body: opts.body ? JSON.stringify(opts.body) : undefined,
+    credentials: 'include'
+  });
+  if(!r.ok){
+    const t = await r.text();
+    throw new Error(`${r.status} ${t}`);
+  }
+  const ct = r.headers.get('content-type') || '';
+  if (ct.startsWith('application/json')) return r.json();
+  return r.text();
+}
+
+/* --------------------------- URL branding --------------------------- */
+function brandForHost(host){
+  const h = (host||'').replace(/^www\./,'').toLowerCase();
+  const map = {
+    'cnn.com':'CNN','cnet.com':'CNET','nytimes.com':'New York Times','bbc.co.uk':'BBC','bbc.com':'BBC',
+    'youtube.com':'YouTube','youtu.be':'YouTube','instagram.com':'Instagram','x.com':'X','twitter.com':'X',
+    'facebook.com':'Facebook','github.com':'GitHub','washingtonpost.com':'Washington Post',
+    'theguardian.com':'The Guardian','bloomberg.com':'Bloomberg','gizmodo.com':'Gizmodo','independent.co.uk':'Independent'
+  };
+  return map[h] || (h.split('.').slice(-2).join('.'));
+}
+function replaceUrlsWithBrand(text){
+  if(!text) return text;
+  return text.replace(/https?:\/\/[^\s)]+/gi, (url) => {
+    try { const u = new URL(url); return brandForHost(u.hostname); }
+    catch {
+      const m = url.match(/^https?:\/\/([^\/\s]+)/i);
+      if(m) return brandForHost(m[1]); return url;
+    }
+  }).replace(/\bwww\.[^\s)]+/gi, s => brandForHost(s.replace(/^www\./,'').split('/')[0]));
+}
+
+/* detect CJK */
+function hasCJK(t){ return /[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uac00-\ud7af]/.test(t||''); }
+
+/* language heuristic */
+function detectLang(text){
+  const t = (text||'').trim();
+  const lower = t.toLowerCase();
+
+  if (/[\u3040-\u30ff]/.test(t)) return 'ja-JP';
+  if (/[\uac00-\ud7af]/.test(t)) return 'ko-KR';
+  if (/[\u4e00-\u9fff]/.test(t)) return 'zh-CN';
+
+  const hasPTChars = /[ãõç]/.test(lower) || /\b(ção|ções)\b/.test(lower);
+  const ptLex = (lower.match(/\b(não|você|vc|vcs|tô|tá|pra|pro|cadê|parabéns|obrigad[ao]|gente|tbm|pois|poxa|cara|vou|ainda|ne|né|também|qdo|pq)\b/gi) || []).length;
+  const hasCircPT = /[âêô]/.test(lower);
+  if (hasPTChars || (hasCircPT && ptLex>=1) || ptLex>=2) return 'pt-BR';
+
+  if (/[ñ¡¿]/.test(t) || /\b(gracias|mañana|aunque|siempre|porque|hoy|ayer)\b/i.test(lower)) return 'es-ES';
+  if (/\b(the|and|you|are|is|be|to|of|in|that|for|with|this|it)\b/i.test(lower)) return 'en-US';
+
+  const nav = (navigator.language || '').toLowerCase();
+  if (nav.startsWith('pt')) return 'pt-BR';
+  if (nav.startsWith('es')) return 'es-ES';
+  return 'en-US';
+}
+
+function saidPrefix(name, langTag){
+  const base = (langTag || 'en-US').slice(0,2);
+  const map = {
+    en: `${name} said:`,
+    pt: `${name} disse:`,
+    es: `${name} dijo:`,
+    fr: `${name} a dit:`,
+    de: `${name} sagte:`,
+    it: `${name} ha detto:`,
+    ja: `${name}が言いました：`,
+    ko: `${name}が言いました:`,
+  };
+  return map[base] || `${name} said:`;
+}
+
+/* --------------------------- Queue & state --------------------------- */
+let reading = false;
+let queue = [];
+let polling = null;
+let firstInitDone = false;
+let localSeen = new Set();
+let processing = false;
+
+/* waiting music */
+function playWaiting(on){
+  const a = els.waitingAudio;
+  if(on){
+    a.volume = 0.8;
+    a.play().catch(()=>{});
+  }else{
+    try{ a.pause(); a.currentTime = 0; }catch(e){}
+  }
+}
+
+/* iOS unlock */
+function makeSilenceWavUrl(ms=200, sr=16000){
+  const samples = Math.round(sr * (ms/1000));
+  const bytesPerSample = 2, channels = 1;
+  const blockAlign = channels * bytesPerSample;
+  const dataBytes = samples * bytesPerSample;
+  const buf = new ArrayBuffer(44 + dataBytes);
+  const v = new DataView(buf);
+  let p = 0;
+  const S = s => { for (let i=0;i<s.length;i++) v.setUint8(p++, s.charCodeAt(i)); };
+  const U32 = n => { v.setUint32(p, n, true); p+=4; };
+  const U16 = n => { v.setUint16(p, n, true); p+=2; };
+  S('RIFF'); U32(36 + dataBytes); S('WAVE');
+  S('fmt '); U32(16); U16(1); U16(channels); U32(sr);
+  U32(sr*blockAlign); U16(blockAlign); U16(16);
+  S('data'); U32(dataBytes);
+  return URL.createObjectURL(new Blob([buf], {type:'audio/wav'}));
+}
+async function unlockAudioIOS(){
+  try{ await els.waitingAudio.play(); els.waitingAudio.pause(); els.waitingAudio.currentTime=0; }catch(_){}
+  try{
+    const url = makeSilenceWavUrl(150);
+    els.ttsAudio.muted = true;
+    els.ttsAudio.src = url;
+    await els.ttsAudio.play();
+    els.ttsAudio.pause(); els.ttsAudio.currentTime = 0;
+    els.ttsAudio.muted = false;
+    setTimeout(()=>URL.revokeObjectURL(url), 10000);
+    logSys('Audio unlocked (iOS).');
+  }catch(e){
+    logSys(`Audio unlock failed: ${e.message}`, true);
+  }
+}
+
+/* TTS via server */
+async function speakViaServerTTS(text, lang){
+  const t = text || '';
+  if(!t.trim()) return;
+
+  const apiLang = lang.startsWith('pt') ? 'pt'
+                : lang.startsWith('es') ? 'es'
+                : lang.startsWith('fr') ? 'fr'
+                : lang.startsWith('de') ? 'de'
+                : lang.startsWith('it') ? 'it'
+                : lang.startsWith('ja') ? 'ja'
+                : lang.startsWith('ko') ? 'ko'
+                : 'en';
+
+  const url = `/api/tts?lang=${encodeURIComponent(apiLang)}`;
+  let blobUrl = null;
+  try{
+    const r = await fetch(url, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({text: t}),
+      credentials: 'include',
+    });
+    if(!r.ok){
+      const msg = await r.text();
+      throw new Error(`TTS ${r.status} ${msg}`);
+    }
+    const blob = await r.blob();
+    blobUrl = URL.createObjectURL(blob);
+    els.ttsAudio.src = blobUrl;
+    isPlaying = true;
+    setSpeaking(true);
+    playWaiting(false);
+    await els.ttsAudio.play();
+    await new Promise(res => els.ttsAudio.onended = () => res());
+  } finally {
+    setSpeaking(false);
+    isPlaying = false;
+    if(blobUrl){ URL.revokeObjectURL(blobUrl); }
+  }
+}
+
+function buildSpeakText(item){
+  const name = (item.author || 'User').trim();
+  let text = (item.text || '').trim();
+  text = replaceUrlsWithBrand(text);
+  const lang = detectLang(text);
+  const pref = saidPrefix(name, lang);
+  return { speakText: `${pref} ${text}`, lang, name, shownText: text };
+}
+
+async function speakItem(item){
+  const { speakText, lang, name, shownText } = buildSpeakText(item);
+
+  setLangChip(lang);
+  setNow(name);
+  setWaiting(false);
+
+  // Professional transcript card (no timestamps, no system noise)
+  addTranscriptCard({
+    name,
+    handle: item.handle || '',
+    text: shownText,
+    lang
+  });
+
+  try{
+    await speakViaServerTTS(speakText, lang);
+  }catch(e){
+    logSys(`TTS error: ${e.message}`, true);
+  }
+}
+
+const sleep = ms => new Promise(r=>setTimeout(r,ms));
+async function processQueue(){
+  if (processing || !reading) return;
+  processing = true;
+  try{
+    while(reading && queue.length){
+      const next = queue.shift();
+      await speakItem(next);
+      await sleep(150);
+    }
+    if(queue.length===0 && !isPlaying){
+      setWaiting(true);
+      playWaiting(true);
+    }
+  } finally {
+    processing = false;
+  }
+}
+
+/* backend glue */
+async function fetchFollows(){
+  try{
+    const r = await api('/api/follows');
+    const count = r.count || 0;
+    els.followsPill.textContent = `${count} following`;
+    els.followsPill.classList.remove('hidden');
+    logSys(`Loaded follows: ${count}`);
+  }catch(e){
+    els.followsPill.classList.add('hidden');
+    logSys(`Follows: session expired. Please log in again.`, true);
+  }
+}
+
+async function initFeed(){
+  try{
+    const r = await api('/api/feed?only_followed=1&init=1');
+    logSys(`Items (init): ${r.init_count ?? 0}`);
+    firstInitDone = true;
+  }catch(e){
+    logSys(`Init feed error: ${e.message}`, true);
+    try{
+      const r2 = await api('/api/feed?init=1');
+      logSys(`Items (init/FALLBACK): ${r2.init_count ?? 0}`);
+      firstInitDone = true;
+    }catch(e2){
+      logSys(`Init fallback failed: ${e2.message}`, true);
+    }
+  }
+}
+
+function transformItem(apiItem){
+  if(!apiItem) return null;
+  let text = (apiItem.text || '').trim();
+  if (hasCJK(text)) { logSys('Skipping CJK post.'); return null; }
+  return { uri: apiItem.uri, author: apiItem.author || 'User', handle: apiItem.handle || '', text };
+}
+
+async function pollFeed(){
+  if(!reading) return;
+  try{
+    const r = await api('/api/feed?only_followed=1');
+    const rows = Array.isArray(r.items) ? r.items : [];
+    let added = 0;
+    for(const raw of rows){
+      const it = transformItem(raw);
+      if(!it) continue;
+      if(!it.uri || localSeen.has(it.uri)) continue;
+      localSeen.add(it.uri);
+      queue.push(it);
+      added++;
+    }
+    if(added){
+      logSys(`+${added} item(s) enqueued (queue: ${queue.length})`);
+      setWaiting(false); playWaiting(false);
+      processQueue();
+    }
+  }catch(e){
+    logSys(`Feed error: ${e.message}`, true);
+  }
+}
+
+/* UI states */
+function showLoggedOutUI(){
+  reading = false;
+  if(polling){ clearInterval(polling); polling = null; }
+  try{ els.ttsAudio.pause(); }catch(_){}
+  playWaiting(false);
+
+  els.loginPanel.classList.remove('hidden');
+  els.mainArea.classList.add('hidden');
+
+  els.sessionPill.textContent = 'Not logged';
+  els.sessionPill.classList.remove('hidden');
+  els.followsPill.classList.add('hidden');
+
+  els.btnLogout.classList.add('hidden');
+  els.btnRefresh.classList.add('hidden');
+  els.btnStart.disabled = false;
+  els.btnPause.disabled = true;
+
+  setLangChip(null);
+  setWaiting(true);
+  logSys('[Init] Ready. Please log in and click Start.');
+}
+
+function showLoggedInUI(handle){
+  els.loginPanel.classList.add('hidden');
+  els.mainArea.classList.remove('hidden');
+
+  els.sessionPill.textContent = handle || 'Logged';
+  els.sessionPill.classList.remove('hidden');
+
+  els.btnLogout.classList.remove('hidden');
+  els.btnRefresh.classList.remove('hidden');
+  els.btnPause.disabled = false;
+}
+
+async function ensureLogged(){
+  const me = await api('/api/me');
+  if(me && me.handle){
+    showLoggedInUI(me.handle);
+    return me;
+  }
+  showLoggedOutUI();
+  return null;
+}
+
+/* start/pause */
+async function startReading(){
+  if(reading){ logSys('Already reading.'); return; }
+  await unlockAudioIOS();
+  if(!firstInitDone) await initFeed();
+  reading = true;
+  logSys('Start reading.');
+  if(!polling){ polling = setInterval(pollFeed, 2000); }
+  await pollFeed();
+  await processQueue();
+}
+function pauseReading(){
+  reading = false;
+  try{ els.ttsAudio.pause(); }catch(_){}
+  setWaiting(true);
+  playWaiting(true);
+  setLangChip(null); // ✅
+  logSys('Paused.');
+}
+
+
+/* boot */
+async function boot(){
+  // Transcript ON by default; persist user choice
+  const saved = localStorage.getItem('bs_transcript_on');
+  if(saved === '0') transcriptOn = false;
+  setTranscriptUI();
+
+  const me = await ensureLogged();
+  if(me && me.handle){
+    logSys(`Login ok: ${me.handle}`);
+    fetchFollows();
+  }
+
+  els.btnLogin.addEventListener('click', async ()=>{
+    try{
+      const handle = els.inHandle.value.trim();
+      const app_password = els.inAppPass.value.trim();
+      if(!handle || !app_password){ alert('Please fill handle and app password.'); return; }
+      const r = await api('/api/login', {method:'POST', body:{handle, app_password}});
+      showLoggedInUI(r.handle || handle);
+      logSys(`Login ok: ${r.handle || handle}`);
+      fetchFollows();
+    }catch(e){
+      logSys(`Login error: ${e.message}`, true);
+      alert('Login failed. Check handle/app password.');
+    }
+  });
+
+  els.btnLogout.addEventListener('click', async ()=>{
+    try{ await api('/api/logout', {method:'POST'}); }catch(_){}
+    logSys('Logged out.');
+    showLoggedOutUI();
+  });
+
+  els.btnRefresh.addEventListener('click', async ()=>{
+    if(!firstInitDone) await initFeed();
+    await pollFeed();
+    await processQueue();
+  });
+
+  // Transcript toggle
+  els.btnTranscript.addEventListener('click', ()=>{
+    transcriptOn = !transcriptOn;
+    localStorage.setItem('bs_transcript_on', transcriptOn ? '1' : '0');
+    setTranscriptUI();
+  });
+  els.btnHideTranscript.addEventListener('click', ()=>{
+    transcriptOn = false;
+    localStorage.setItem('bs_transcript_on', '0');
+    setTranscriptUI();
+  });
+  els.btnClearTranscript.addEventListener('click', clearTranscript);
+
+  els.btnStart.addEventListener('click', startReading);
+  els.btnPause.addEventListener('click', pauseReading);
+
+  logSys('[Init] Ready. Please log in and click Start.');
+}
+document.addEventListener('DOMContentLoaded', boot);
+</script>
+</body>
+</html>
