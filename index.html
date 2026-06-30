@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Blueshout</title>
-  <!-- BS_VERSION=31 -->
+  <!-- BS_VERSION=32 -->
 
   <!-- Inline favicon to avoid /favicon.ico 404 -->
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3CradialGradient id='g' cx='30%25' cy='30%25' r='70%25'%3E%3Cstop offset='0%25' stop-color='%234ea3ff'/%3E%3Cstop offset='100%25' stop-color='%231a3a7a'/%3E%3C/radialGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='16' fill='url(%23g)'/%3E%3Cpath d='M24 24h7l7-6v28l-7-6h-7z' fill='white' opacity='.95'/%3E%3Cpath d='M44 26c3 3 3 9 0 12' fill='none' stroke='white' stroke-width='4' stroke-linecap='round'/%3E%3Cpath d='M50 22c5 5 5 15 0 20' fill='none' stroke='white' stroke-width='4' stroke-linecap='round' opacity='.8'/%3E%3C/svg%3E" />
@@ -784,12 +784,17 @@ function detectLang(text){
   if (/[\uac00-\ud7af]/.test(t)) return 'ko-KR';
   if (/[\u4e00-\u9fff]/.test(t)) return 'zh-CN';
 
+  const ptShortPhrase = /(^|[\s.?!])(era|foi|é)[\s.?!]+(penal|pênalti)\b/i.test(lower)
+    || /(^|\s)um\s+clássic[ao]\b/i.test(lower)
+    || /(^|\s)uma\s+clássica\b/i.test(lower);
   const hasPTChars = /[ãõç]/.test(lower) || /\b(ção|ções)\b/.test(lower);
-  const ptLex = (lower.match(/\b(não|você|vc|vcs|tô|tá|pra|pro|cadê|parabéns|obrigad[ao]|gente|tbm|pois|poxa|cara|vou|ainda|ne|né|também|qdo|pq)\b/gi) || []).length;
+  const ptLex = (lower.match(/\b(não|você|vc|vcs|tô|tá|pra|pro|cadê|parabéns|obrigad[ao]|gente|tbm|pois|poxa|cara|vou|ainda|ne|né|também|qdo|pq|um|uma|era|foi|penal|pênalti|clássic[ao]|isso|aqui|hoje|ontem|muito|mais|sem|com|até|já|só)\b/gi) || []).length;
   const hasCircPT = /[âêô]/.test(lower);
-  if (hasPTChars || (hasCircPT && ptLex>=1) || ptLex>=2) return 'pt-BR';
+  const hasPortugueseAcute = /[áéíóú]/.test(lower) && ptLex >= 1;
+  if (ptShortPhrase || hasPTChars || hasPortugueseAcute || (hasCircPT && ptLex>=1) || ptLex>=2) return 'pt-BR';
 
-  if (/[ñ¡¿]/.test(t) || /\b(gracias|mañana|aunque|siempre|porque|hoy|ayer|usted|estoy|para|pero)\b/i.test(lower)) return 'es-ES';
+  const esShortPhrase = /(^|\s)un\s+clásic[ao]\b/i.test(lower) || /(^|\s)una\s+clásica\b/i.test(lower);
+  if (esShortPhrase || /[ñ¡¿]/.test(t) || /\b(gracias|mañana|aunque|siempre|porque|hoy|ayer|usted|estoy|para|pero)\b/i.test(lower)) return 'es-ES';
   if (/[ąćęłńóśźż]/.test(lower) || /\b(dzięki|dziękuję|jest|nie|oraz|dzisiaj|proszę|cześć)\b/i.test(lower)) return 'pl-PL';
   if (/[іїєґ]/.test(lower)) return 'uk-UA';
   if (/[а-яё]/i.test(t)) return 'ru-RU';
