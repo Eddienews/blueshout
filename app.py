@@ -364,6 +364,7 @@ PIPER_LANG_LABELS = {
     "ja": "Japanese",
     "ko": "Korean",
     "zh": "Chinese",
+    "he": "Hebrew",
     "nl": "Dutch",
     "pl": "Polish",
     "ru": "Russian",

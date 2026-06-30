@@ -273,7 +273,7 @@ sudo systemctl cat blueshout-voice.service
 sudo ls -l /home/blueshout/voice/.env
 ```
 
-### `/api/tts` returns `modelo Piper nao encontrado`
+### `/api/tts` returns `Piper model not found`
 
 The selected voice model is not present or the configured path is wrong.
 

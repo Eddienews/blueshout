@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Blueshout</title>
-  <!-- BS_VERSION=32 -->
+  <!-- BS_VERSION=33 -->
 
   <!-- Inline favicon to avoid /favicon.ico 404 -->
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3CradialGradient id='g' cx='30%25' cy='30%25' r='70%25'%3E%3Cstop offset='0%25' stop-color='%234ea3ff'/%3E%3Cstop offset='100%25' stop-color='%231a3a7a'/%3E%3C/radialGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='16' fill='url(%23g)'/%3E%3Cpath d='M24 24h7l7-6v28l-7-6h-7z' fill='white' opacity='.95'/%3E%3Cpath d='M44 26c3 3 3 9 0 12' fill='none' stroke='white' stroke-width='4' stroke-linecap='round'/%3E%3Cpath d='M50 22c5 5 5 15 0 20' fill='none' stroke='white' stroke-width='4' stroke-linecap='round' opacity='.8'/%3E%3C/svg%3E" />
@@ -556,7 +556,7 @@ const els = {
 /* --------------------------- TTS capabilities --------------------------- */
 const LANGUAGE_NAMES = {
   pt:'Portuguese', en:'English', es:'Spanish', fr:'French', de:'German', it:'Italian',
-  ja:'Japanese', ko:'Korean', zh:'Chinese', nl:'Dutch', pl:'Polish', ru:'Russian', sv:'Swedish', uk:'Ukrainian'
+  ja:'Japanese', ko:'Korean', zh:'Chinese', he:'Hebrew', nl:'Dutch', pl:'Polish', ru:'Russian', sv:'Swedish', uk:'Ukrainian'
 };
 let ttsCaps = {available_bases:['en'], default_base:'en', voices:[]};
 let selectedVoiceBase = localStorage.getItem('bs_voice_base') || 'auto';
@@ -677,6 +677,7 @@ function addTranscriptCard({name, handle, text, lang}){
 
   const body = document.createElement('div');
   body.className = 'ttext';
+  body.dir = 'auto';
   body.textContent = text || '';
 
   card.appendChild(meta);
@@ -803,6 +804,7 @@ function detectLang(text){
   if (/[äöüß]/.test(lower) || /\b(und|ich|nicht|mit|für|danke|heute|aber|auch|sein)\b/i.test(lower)) return 'de-DE';
   if (/[àèéìòù]/.test(lower) || /\b(grazie|perché|oggi|sempre|sono|con|per|questo|ciao)\b/i.test(lower)) return 'it-IT';
   if (/\b(het|niet|dank|vandaag|jij|wij|maar|zijn)\b/i.test(lower)) return 'nl-NL';
+  if (/[\u0590-\u05ff]/.test(t)) return 'he-IL';
   if (/\b(the|and|you|are|is|be|to|of|in|that|for|with|this|it)\b/i.test(lower)) return 'en-US';
 
   const nav = (navigator.language || '').toLowerCase();
@@ -816,6 +818,7 @@ function detectLang(text){
   if (nav.startsWith('sv')) return 'sv-SE';
   if (nav.startsWith('ru')) return 'ru-RU';
   if (nav.startsWith('uk')) return 'uk-UA';
+  if (nav.startsWith('he') || nav.startsWith('iw')) return 'he-IL';
   return 'en-US';
 }
 
