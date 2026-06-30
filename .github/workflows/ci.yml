@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.10', '3.11', '3.12']
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Compile backend
+        env:
+          SECRET_KEY: ci-secret-key
+          SESSION_COOKIE_SECURE: '0'
+        run: python -m py_compile app.py
+
+      - name: Smoke test Flask app
+        env:
+          SECRET_KEY: ci-secret-key
+          SESSION_COOKIE_SECURE: '0'
+        run: |
+          python - <<'PYTEST'
+          from app import app
+
+          client = app.test_client()
+          health = client.get('/api/health')
+          assert health.status_code == 200
+          assert health.get_json() == {'ok': True}
+
+          tts = client.post('/api/tts', json={'text': 'hello'})
+          assert tts.status_code == 401
+
+          assert app.config['SESSION_COOKIE_HTTPONLY'] is True
+          assert app.config['SECRET_KEY']
+          PYTEST
