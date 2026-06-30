@@ -6,7 +6,14 @@ The format is inspired by [Keep a Changelog](https://keepachangelog.com/en/1.1.0
 
 ## Unreleased
 
-No unreleased changes yet.
+### Added
+
+- Added an extensible Piper voice catalog and a web app voice-language selector.
+- Added automatic discovery of installed Piper `.onnx` models and documentation for adding new language voices.
+
+### Changed
+
+- Improved language fallback so posts use the detected language when a matching voice is installed, or a selected/default voice when not.
 
 ## 0.1.0 - 2026-06-30
 

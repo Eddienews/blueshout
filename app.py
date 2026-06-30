@@ -354,52 +354,135 @@ TTS_STRICT_PIPER = _env_bool("TTS_STRICT_PIPER", True)  # True = não cair para 
 PIPER_BIN = os.environ.get("PIPER_BIN", "/usr/local/bin/piper")
 PIPER_MODELS_DIR = os.environ.get("PIPER_MODELS_DIR", "/opt/piper/models")
 
+PIPER_LANG_LABELS = {
+    "pt": "Portuguese",
+    "en": "English",
+    "es": "Spanish",
+    "fr": "French",
+    "de": "German",
+    "it": "Italian",
+    "ja": "Japanese",
+    "ko": "Korean",
+    "zh": "Chinese",
+    "nl": "Dutch",
+    "pl": "Polish",
+    "ru": "Russian",
+    "sv": "Swedish",
+    "uk": "Ukrainian",
+}
+PIPER_DEFAULT_MODELS = {
+    "pt": "pt_BR-jeff-medium",
+    "en": "en_US-amy-medium",
+    "es": "es_ES-sharvard-medium",
+    "fr": "fr_FR-siwis-medium",
+    "de": "de_DE-thorsten-medium",
+    "it": "it_IT-paola-medium",
+}
+
+
 def _file_exists(path: str) -> bool:
     try:
         return bool(path) and os.path.isfile(path)
     except Exception:
         return False
 
+
+def _lang_base(lang: str) -> str:
+    return (lang or "en-US").strip()[:2].lower() or "en"
+
+
+def _env_voice_overrides() -> Dict[str, str]:
+    overrides: Dict[str, str] = {}
+    for raw in (os.environ.get("PIPER_VOICES") or "").split(","):
+        if "=" not in raw:
+            continue
+        base, model_base = raw.split("=", 1)
+        base = _lang_base(base)
+        model_base = model_base.strip()
+        if base and model_base:
+            overrides[base] = model_base.removesuffix(".onnx")
+
+    bases = set(PIPER_LANG_LABELS) | set(PIPER_DEFAULT_MODELS)
+    extra_bases = os.environ.get("PIPER_LANGUAGES") or ""
+    bases.update(_lang_base(part) for part in extra_bases.split(",") if part.strip())
+    for base in bases:
+        env_path = os.environ.get(f"PIPER_{base.upper()}")
+        if env_path:
+            overrides[base] = env_path.strip().removesuffix(".onnx")
+    return overrides
+
+
+def _installed_piper_models() -> Dict[str, List[str]]:
+    models: Dict[str, List[str]] = {}
+    try:
+        filenames = os.listdir(PIPER_MODELS_DIR)
+    except OSError:
+        return models
+    for filename in filenames:
+        if not filename.endswith(".onnx"):
+            continue
+        base = filename[:2].lower()
+        if not base.isalpha():
+            continue
+        model_base = os.path.join(PIPER_MODELS_DIR, filename.removesuffix(".onnx"))
+        models.setdefault(base, []).append(model_base)
+    for values in models.values():
+        values.sort(key=_model_preference_key)
+    return models
+
+
+def _model_preference_key(model_base: str) -> Tuple[int, str]:
+    name = os.path.basename(model_base).lower()
+    if "-medium" in name:
+        rank = 0
+    elif "-high" in name:
+        rank = 1
+    elif "-low" in name:
+        rank = 2
+    elif "-x_low" in name:
+        rank = 3
+    else:
+        rank = 4
+    return rank, name
+
+
+def _configured_tts_bases() -> List[str]:
+    bases = set(PIPER_DEFAULT_MODELS) | set(PIPER_LANG_LABELS)
+    bases.update(_env_voice_overrides())
+    bases.update(_installed_piper_models())
+    for raw in (os.environ.get("PIPER_LANGUAGES") or "").split(","):
+        if raw.strip():
+            bases.add(_lang_base(raw))
+    return sorted(base for base in bases if base)
+
+
+def _piper_model_base(base: str) -> str:
+    base = _lang_base(base)
+    overrides = _env_voice_overrides()
+    if base in overrides:
+        return overrides[base]
+    if base in PIPER_DEFAULT_MODELS:
+        return os.path.join(PIPER_MODELS_DIR, PIPER_DEFAULT_MODELS[base])
+    installed = _installed_piper_models().get(base) or []
+    return installed[0] if installed else ""
+
+
 def _pick_piper_paths(lang: str) -> Tuple[str, str]:
     """
-    Escolhe modelo Piper pelo idioma (base 2 letras). Permite override por env:
-      PIPER_PT, PIPER_EN, PIPER_ES, PIPER_FR, PIPER_DE, PIPER_IT, PIPER_JA, PIPER_KO
-    Se não houver override, usa nomes padrão dentro de PIPER_MODELS_DIR.
+    Escolhe modelo Piper pelo idioma. Suporta:
+      - modelos padrão em PIPER_MODELS_DIR;
+      - override por PIPER_<BASE>, ex.: PIPER_NL=/opt/piper/models/nl_NL-voice-medium;
+      - override em lote por PIPER_VOICES="nl=/path/model,pl=/path/model";
+      - descoberta automática de arquivos *.onnx instalados em PIPER_MODELS_DIR.
     Retorna: (onnx_path, cfg_path) – cfg pode não existir (Piper aceita sem -c).
     """
-    base = (lang or "en-US")[:2].lower()
-    env_map = {
-        "pt": os.environ.get("PIPER_PT"),
-        "en": os.environ.get("PIPER_EN"),
-        "es": os.environ.get("PIPER_ES"),
-        "fr": os.environ.get("PIPER_FR"),
-        "de": os.environ.get("PIPER_DE"),
-        "it": os.environ.get("PIPER_IT"),
-        "ja": os.environ.get("PIPER_JA"),
-        "ko": os.environ.get("PIPER_KO"),
-    }
-    model_base = env_map.get(base)
-
+    model_base = _piper_model_base(_lang_base(lang))
     if not model_base:
-        default_name = {
-            "pt": "pt_BR-jeff-medium",        # está OK no seu servidor
-            "en": "en_US-amy-medium",
-            "es": "es_ES-sharvard-medium",
-            "fr": "fr_FR-siwis-medium",
-            "de": "de_DE-thorsten-medium",
-            "it": "it_IT-paola-medium",
-            # ja/ko só se tiverem override
-        }.get(base)
-        if default_name:
-            model_base = os.path.join(PIPER_MODELS_DIR, default_name)
-
-    if not model_base:
-        # sem modelo definido para esse base
         return "", ""
-
     onnx = model_base + ".onnx"
-    cfg  = model_base + ".onnx.json"
+    cfg = model_base + ".onnx.json"
     return onnx, cfg
+
 
 def _is_native_for_lang(lang: str, onnx_path: str) -> bool:
     """
@@ -710,26 +793,37 @@ def api_tts():
 def api_tts_caps():
     """
     Informa quais idiomas o Piper realmente cobre.
-    available_bases: códigos de 2 letras garantidos (pt, en, es, fr, de, it, ja, ko)
-    models: mapa lang->modelo resolvido (útil para debug)
+    available_bases: códigos de 2 letras com modelo nativo encontrado.
+    voices: lista pronta para a UI, incluindo idioma, modelo e disponibilidade.
+    models: mapa base->modelo resolvido (útil para debug).
     """
-    def is_native(lang: str, onnx: str) -> bool:
-        return _is_native_for_lang(lang, onnx)
-
-    langs_to_check = ["pt-BR", "en-US", "es-ES", "fr-FR", "de-DE", "it-IT", "ja", "ko"]
     available_bases = set()
     models_map: Dict[str, str] = {}
+    voices: List[Dict[str, Any]] = []
 
-    for lng in langs_to_check:
-        onnx, _cfg = _pick_piper_paths(lng)
-        models_map[lng] = (os.path.basename(onnx).removesuffix(".onnx") if onnx else "")
-        if _file_exists(onnx) and is_native(lng, onnx):
-            available_bases.add(lng[:2].lower())
+    for base in _configured_tts_bases():
+        onnx, _cfg = _pick_piper_paths(base)
+        model = os.path.basename(onnx).removesuffix(".onnx") if onnx else ""
+        native = _is_native_for_lang(base, onnx)
+        available = _file_exists(onnx) and native
+        models_map[base] = model
+        if available:
+            available_bases.add(base)
+        voices.append({
+            "base": base,
+            "lang": base,
+            "label": PIPER_LANG_LABELS.get(base, base.upper()),
+            "model": model,
+            "available": available,
+            "native": native,
+        })
 
     return jsonify({
         "available_bases": sorted(available_bases),
+        "default_base": "en" if "en" in available_bases else (sorted(available_bases)[0] if available_bases else ""),
         "models": models_map,
         "strict": TTS_STRICT_PIPER,
+        "voices": voices,
     })
 
 

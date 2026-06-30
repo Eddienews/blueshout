@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Blueshout</title>
-  <!-- BS_VERSION=29 -->
+  <!-- BS_VERSION=30 -->
 
   <!-- Inline favicon to avoid /favicon.ico 404 -->
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3CradialGradient id='g' cx='30%25' cy='30%25' r='70%25'%3E%3Cstop offset='0%25' stop-color='%234ea3ff'/%3E%3Cstop offset='100%25' stop-color='%231a3a7a'/%3E%3C/radialGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='16' fill='url(%23g)'/%3E%3Cpath d='M24 24h7l7-6v28l-7-6h-7z' fill='white' opacity='.95'/%3E%3Cpath d='M44 26c3 3 3 9 0 12' fill='none' stroke='white' stroke-width='4' stroke-linecap='round'/%3E%3Cpath d='M50 22c5 5 5 15 0 20' fill='none' stroke='white' stroke-width='4' stroke-linecap='round' opacity='.8'/%3E%3C/svg%3E" />
@@ -249,15 +249,24 @@
 
     /* ================= LOGIN ================= */
     #loginPanel .row{display:flex;gap:8px;flex-wrap:wrap}
-    .input{
+    .input,
+    .select{
       background:var(--panel2);
       color:#eaf1ff;
       border:1px solid #24365f;
       border-radius:10px;
       padding:10px 12px;
-      min-width:240px;
       outline:none;
+    }
+    .input{
+      min-width:240px;
       flex:1 1 240px;
+    }
+    .select{
+      min-width:180px;
+      max-width:260px;
+      font-weight:800;
+      color:#dbe9ff;
     }
 
     /* ================= NOW PLAYING ================= */
@@ -473,6 +482,9 @@
         <div id="waitingLabel">Waiting for new posts</div>
 
         <div class="nowMeta">
+          <select id="voiceSelect" class="select" aria-label="Voice language">
+            <option value="auto">Voice: Auto</option>
+          </select>
           <div id="langChip" class="pill hidden">Lang: <strong id="langValue">en-US</strong></div>
         </div>
 
@@ -538,7 +550,70 @@ const els = {
 
   langChip: document.getElementById('langChip'),
   langValue: document.getElementById('langValue'),
+  voiceSelect: document.getElementById('voiceSelect'),
 };
+
+/* --------------------------- TTS capabilities --------------------------- */
+const LANGUAGE_NAMES = {
+  pt:'Portuguese', en:'English', es:'Spanish', fr:'French', de:'German', it:'Italian',
+  ja:'Japanese', ko:'Korean', zh:'Chinese', nl:'Dutch', pl:'Polish', ru:'Russian', sv:'Swedish', uk:'Ukrainian'
+};
+let ttsCaps = {available_bases:['en'], default_base:'en', voices:[]};
+let selectedVoiceBase = localStorage.getItem('bs_voice_base') || 'auto';
+
+function langBase(lang){ return (lang || 'en').slice(0,2).toLowerCase(); }
+function availableVoiceBases(){ return new Set(ttsCaps.available_bases || []); }
+function isVoiceAvailable(base){ return availableVoiceBases().has(langBase(base)); }
+function browserVoiceBase(){
+  const base = langBase(navigator.language || 'en');
+  return isVoiceAvailable(base) ? base : (ttsCaps.default_base || 'en');
+}
+function resolveVoiceBase(detectedLang){
+  const detectedBase = langBase(detectedLang);
+  if(selectedVoiceBase && selectedVoiceBase !== 'auto'){
+    return isVoiceAvailable(selectedVoiceBase) ? selectedVoiceBase : (ttsCaps.default_base || 'en');
+  }
+  if(isVoiceAvailable(detectedBase)) return detectedBase;
+  return browserVoiceBase();
+}
+function labelForVoice(base){
+  const voice = (ttsCaps.voices || []).find(v => v.base === base);
+  return (voice && voice.label) || LANGUAGE_NAMES[base] || base.toUpperCase();
+}
+function populateVoiceSelect(){
+  const select = els.voiceSelect;
+  if(!select) return;
+  const available = (ttsCaps.voices || []).filter(v => v.available);
+  select.innerHTML = '';
+  const auto = document.createElement('option');
+  auto.value = 'auto';
+  auto.textContent = 'Voice: Auto';
+  select.appendChild(auto);
+  for(const voice of available){
+    const opt = document.createElement('option');
+    opt.value = voice.base;
+    opt.textContent = `Voice: ${voice.label || voice.base.toUpperCase()}`;
+    select.appendChild(opt);
+  }
+  if(selectedVoiceBase !== 'auto' && !available.some(v => v.base === selectedVoiceBase)){
+    selectedVoiceBase = 'auto';
+    localStorage.setItem('bs_voice_base', selectedVoiceBase);
+  }
+  select.value = selectedVoiceBase;
+}
+async function loadTtsCapabilities(){
+  try{
+    const caps = await api('/api/tts_caps');
+    if(caps && Array.isArray(caps.available_bases)){
+      ttsCaps = caps;
+      populateVoiceSelect();
+      logSys(`TTS voices: ${caps.available_bases.join(', ') || 'none'}`);
+    }
+  }catch(e){
+    logSys(`TTS capabilities unavailable: ${e.message}`, true);
+    populateVoiceSelect();
+  }
+}
 
 /* --------------------------- Transcript: ON by default --------------------------- */
 let transcriptOn = true;
@@ -714,12 +789,18 @@ function detectLang(text){
   const hasCircPT = /[âêô]/.test(lower);
   if (hasPTChars || (hasCircPT && ptLex>=1) || ptLex>=2) return 'pt-BR';
 
-  if (/[ñ¡¿]/.test(t) || /\b(gracias|mañana|aunque|siempre|porque|hoy|ayer)\b/i.test(lower)) return 'es-ES';
+  if (/[ñ¡¿]/.test(t) || /\b(gracias|mañana|aunque|siempre|porque|hoy|ayer|usted|estoy|para|pero)\b/i.test(lower)) return 'es-ES';
+  if (/[àâæçéèêëîïôœùûüÿ]/.test(lower) || /\b(avec|pour|dans|vous|nous|mais|bonjour|merci|aujourd'hui|toujours)\b/i.test(lower)) return 'fr-FR';
+  if (/[äöüß]/.test(lower) || /\b(und|ich|nicht|mit|für|danke|heute|aber|auch|sein)\b/i.test(lower)) return 'de-DE';
+  if (/[àèéìòù]/.test(lower) || /\b(grazie|perché|oggi|sempre|sono|con|per|questo|ciao)\b/i.test(lower)) return 'it-IT';
   if (/\b(the|and|you|are|is|be|to|of|in|that|for|with|this|it)\b/i.test(lower)) return 'en-US';
 
   const nav = (navigator.language || '').toLowerCase();
   if (nav.startsWith('pt')) return 'pt-BR';
   if (nav.startsWith('es')) return 'es-ES';
+  if (nav.startsWith('fr')) return 'fr-FR';
+  if (nav.startsWith('de')) return 'de-DE';
+  if (nav.startsWith('it')) return 'it-IT';
   return 'en-US';
 }
 
@@ -796,15 +877,7 @@ async function speakViaServerTTS(text, lang){
   const t = text || '';
   if(!t.trim()) return;
 
-  const apiLang = lang.startsWith('pt') ? 'pt'
-                : lang.startsWith('es') ? 'es'
-                : lang.startsWith('fr') ? 'fr'
-                : lang.startsWith('de') ? 'de'
-                : lang.startsWith('it') ? 'it'
-                : lang.startsWith('ja') ? 'ja'
-                : lang.startsWith('ko') ? 'ko'
-                : 'en';
-
+  const apiLang = resolveVoiceBase(lang);
   const url = `/api/tts?lang=${encodeURIComponent(apiLang)}`;
   let blobUrl = null;
   try{
@@ -838,14 +911,15 @@ function buildSpeakText(item){
   let text = (item.text || '').trim();
   text = replaceUrlsWithBrand(text);
   const lang = detectLang(text);
-  const pref = saidPrefix(name, lang);
-  return { speakText: `${pref} ${text}`, lang, name, shownText: text };
+  const voiceBase = resolveVoiceBase(lang);
+  const pref = saidPrefix(name, voiceBase);
+  return { speakText: `${pref} ${text}`, lang, voiceBase, name, shownText: text };
 }
 
 async function speakItem(item){
-  const { speakText, lang, name, shownText } = buildSpeakText(item);
+  const { speakText, lang, voiceBase, name, shownText } = buildSpeakText(item);
 
-  setLangChip(lang);
+  setLangChip(`${lang} → ${labelForVoice(voiceBase)}`);
   setNow(name);
   setWaiting(false);
 
@@ -917,7 +991,13 @@ async function initFeed(){
 function transformItem(apiItem){
   if(!apiItem) return null;
   let text = (apiItem.text || '').trim();
-  if (hasCJK(text)) { logSys('Skipping CJK post.'); return null; }
+  if (hasCJK(text)) {
+    const detectedBase = langBase(detectLang(text));
+    if(!isVoiceAvailable(detectedBase) && selectedVoiceBase === 'auto'){
+      logSys('Skipping CJK post without installed matching voice.');
+      return null;
+    }
+  }
   return { uri: apiItem.uri, author: apiItem.author || 'User', handle: apiItem.handle || '', text };
 }
 
@@ -1018,6 +1098,8 @@ async function boot(){
   const saved = localStorage.getItem('bs_transcript_on');
   if(saved === '0') transcriptOn = false;
   setTranscriptUI();
+  populateVoiceSelect();
+  await loadTtsCapabilities();
 
   const me = await ensureLogged();
   if(me && me.handle){
@@ -1064,6 +1146,11 @@ async function boot(){
     setTranscriptUI();
   });
   els.btnClearTranscript.addEventListener('click', clearTranscript);
+
+  els.voiceSelect.addEventListener('change', ()=>{
+    selectedVoiceBase = els.voiceSelect.value || 'auto';
+    localStorage.setItem('bs_voice_base', selectedVoiceBase);
+  });
 
   els.btnStart.addEventListener('click', startReading);
   els.btnPause.addEventListener('click', pauseReading);

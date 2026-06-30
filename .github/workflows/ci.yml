@@ -48,6 +48,13 @@ jobs:
           tts = client.post('/api/tts', json={'text': 'hello'})
           assert tts.status_code == 401
 
+          caps = client.get('/api/tts_caps')
+          assert caps.status_code == 200
+          caps_json = caps.get_json()
+          assert 'available_bases' in caps_json
+          assert 'voices' in caps_json
+          assert isinstance(caps_json['voices'], list)
+
           assert app.config['SESSION_COOKIE_HTTPONLY'] is True
           assert app.config['SECRET_KEY']
           PYTEST

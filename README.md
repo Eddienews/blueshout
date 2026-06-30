@@ -112,8 +112,10 @@ Install Piper separately and configure model paths with environment variables:
 - `PIPER_BIN`
 - `PIPER_MODELS_DIR`
 - Optional per-language overrides such as `PIPER_PT`, `PIPER_EN`, and `PIPER_ES`
+- Optional `PIPER_LANGUAGES` to expose additional language bases, for example `nl,pl,ja`
+- Optional `PIPER_VOICES` for bulk model overrides, for example `nl=/opt/piper/models/nl_NL-mls-medium,pl=/opt/piper/models/pl_PL-darkman-medium`
 
-The default configuration expects models under `/opt/piper/models`.
+The default configuration expects models under `/opt/piper/models`. Blueshout automatically reports the voices that are actually installed through `/api/tts_caps`, and the web app lets users choose between automatic language matching and installed voices.
 
 ## Deployment
 
@@ -144,7 +146,7 @@ Recommended production settings:
 
 ## Roadmap
 
-- Add selectable voices and language preferences
+- Add more bundled language presets and voice quality options
 - Add richer queue controls for skipping, replaying, and pausing posts
 - Add persistent server-side session/cache storage such as Redis
 - Add automated browser smoke tests for the main UI
