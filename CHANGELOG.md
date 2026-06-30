@@ -10,6 +10,7 @@ The format is inspired by [Keep a Changelog](https://keepachangelog.com/en/1.1.0
 
 - Added an extensible Piper voice catalog and a web app voice-language selector.
 - Added automatic discovery of installed Piper `.onnx` models and documentation for adding new language voices.
+- Added a production deployment guide covering systemd, reverse proxies, HTTPS, Piper models, updates, and troubleshooting.
 
 ### Changed
 

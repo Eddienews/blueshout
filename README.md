@@ -12,6 +12,7 @@
   <a href="https://blueshout.app/">Live Demo</a> |
   <a href="#features">Features</a> |
   <a href="#getting-started">Getting Started</a> |
+  <a href="docs/deployment.md">Deployment</a> |
   <a href="#roadmap">Roadmap</a> |
   <a href="#security">Security</a> |
   <a href="CHANGELOG.md">Changelog</a>
@@ -125,7 +126,7 @@ A typical production deployment uses Gunicorn behind a reverse proxy:
 gunicorn --workers 1 --threads 8 --timeout 180 -b 127.0.0.1:5000 app:app
 ```
 
-For systemd deployments, point `EnvironmentFile` at a private `.env` file and do not commit that file.
+For systemd deployments, point `EnvironmentFile` at a private `.env` file and do not commit that file. See the full [Deployment Guide](docs/deployment.md) for server setup, Piper models, systemd, Nginx/Apache, HTTPS, production checks, updates, and troubleshooting.
 
 Recommended production settings:
 
