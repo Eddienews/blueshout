@@ -6,6 +6,10 @@ The format is inspired by [Keep a Changelog](https://keepachangelog.com/en/1.1.0
 
 ## Unreleased
 
+No unreleased changes yet.
+
+## 0.1.0 - 2026-06-30
+
 ### Added
 
 - Public README with demo link, screenshot, setup instructions, and project roadmap.
@@ -15,6 +19,7 @@ The format is inspired by [Keep a Changelog](https://keepachangelog.com/en/1.1.0
 ### Changed
 
 - Prepared Blueshout for open source distribution under the MIT License.
+- Updated Python and GitHub Actions dependencies through Dependabot.
 
 ### Security
 
