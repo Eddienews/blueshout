@@ -14,6 +14,7 @@ The format is inspired by [Keep a Changelog](https://keepachangelog.com/en/1.1.0
 ### Changed
 
 - Improved language fallback so posts use the detected language when a matching voice is installed, or a selected/default voice when not.
+- Expanded automatic language detection for Dutch, Polish, Swedish, Russian, and Ukrainian posts.
 
 ## 0.1.0 - 2026-06-30
 
